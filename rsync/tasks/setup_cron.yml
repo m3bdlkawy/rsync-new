@@ -1,0 +1,57 @@
+# set_permissions.yml
+- name: Ensure correct permissions on rsync source directory
+  ansible.builtin.file:
+    path: "{{ rsync_source_dir }}"
+    state: directory
+    owner: "{{ rsync_source_dir_owner }}"
+    group: "{{ rsync_source_dir_group }}"
+    mode: "{{ rsync_source_dir_mode }}"
+  become: true
+  when: inventory_hostname != groups['worker'][0]
+
+- name: Ensure correct permissions on rsync destination directory
+  ansible.builtin.file:
+    path: "{{ rsync_dest_dir }}"
+    state: directory
+    owner: "{{ rsync_dest_dir_owner }}"
+    group: "{{ rsync_dest_dir_group }}"
+    mode: "{{ rsync_dest_dir_mode }}"
+  become: true
+  when: inventory_hostname != groups['master1'][0]
+
+
+- name: "Add Rsync cron job"
+  ansible.builtin.cron:
+    name: "Rsync cron job"
+    state: present
+    minute: "*/10"
+    hour: "*"
+    day: "*"
+    month: "*"
+    weekday: "*"
+    job: "rsync -azvP /mnt/Data/Static/Records root@{{ groups['master1'][0] }}:/media/branches/$(hostname) > /var/log/rsync.log"
+  when: ansible_hostname != "{{ groups['master'][0] }}"
+
+- name: "Add Cleaning cron job for workers every 3 months"
+  ansible.builtin.cron:
+    name: "cleaning cron job"
+    state: present
+    minute: "0"
+    hour: "0"
+    day: "1"
+    month: "*/3"
+    weekday: "*"
+    job: "sudo rm -f /mnt/Data/Static/Records/* > /var/log/cleaning.log"
+  when: ansible_hostname != "{{ groups['master1'][0] }}"
+
+- name: "Add Cleaning cron job for master every 6 months"
+  ansible.builtin.cron:
+    name: "cleaning cron job"
+    state: present
+    minute: "0"
+    hour: "0"
+    day: "1"
+    month: "*/6"
+    weekday: "*"
+    job: " sudo ls -l /media/branches | grep br | awk '{print $9}' | while read line; do rm -f /media/branches/$line/*; done > /var/log/cleaning.log"
+  when: ansible_hostname == "{{ groups['master1'][0] }}"

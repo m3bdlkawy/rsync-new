@@ -1,0 +1,25 @@
+- name: Ensure /tmp directory has correct permissions on all nodes
+  ansible.builtin.file:
+    path: /tmp
+    state: directory
+    mode: '1777'
+  become: true
+
+- name: Create rsync user with nologin shell
+  ansible.builtin.user:
+    name: "{{ rsync_user }}"
+    shell: /sbin/nologin
+    create_home: true
+  become: true
+
+- name: Create .ssh directory for rsync user
+  ansible.builtin.file:
+    path: "/home/{{ rsync_user }}/.ssh"
+    state: directory
+    owner: "{{ rsync_user }}"
+    group: "{{ rsync_user }}"
+    mode: '0700'
+  become: true
+
+
+

@@ -1,0 +1,21 @@
+- name: Create user
+  include_tasks: prepare_server.yml
+
+- name: Setup SSH configurations
+  include_tasks: setup_ssh.yml
+
+- name: Ensure rsync is installed
+  ansible.builtin.package:
+    name: rsync
+    state: present
+
+- name: Setup cron jobs
+  include_tasks: setup_cron.yml
+
+- name: Allow rsync_user to use rsync with sudo without a password
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/rsync_user
+    create: true
+    mode: '0440'
+    line: "{{ rsync_user }} ALL=(root) NOPASSWD: /usr/bin/rsync"
+  become: true

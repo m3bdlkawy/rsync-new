@@ -1,0 +1,5 @@
+- name: Configure etcd cluster
+  hosts: all
+  become: true
+  roles:
+  - rsync
