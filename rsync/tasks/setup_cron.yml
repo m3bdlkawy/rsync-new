@@ -30,7 +30,7 @@
     month: "*"
     weekday: "*"
     job: "rsync -azvP /mnt/Data/Static/Records root@{{ groups['master1'][0] }}:/media/branches/$(hostname) > /var/log/rsync.log"
-  when: ansible_hostname != "{{ groups['master'][0] }}"
+  when: ansible_hostname != "{{ groups['master1'][0] }}"
 
 - name: "Add Cleaning cron job for workers every 3 months"
   ansible.builtin.cron:
